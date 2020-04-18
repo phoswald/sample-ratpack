@@ -15,9 +15,10 @@ public class Application {
     private static final Logger logger = Logger.getLogger(Application.class);
 
     public static void main(String[] args) throws Exception {
-        logger.info("sample-ratpack is starting");
+        int port = Integer.parseInt(System.getProperty("app.http.port", "8080"));
+        logger.info("sample-ratpack is starting, port=" + port);
         RatpackServer.start(server -> server
-                .serverConfig(c -> c.port(8080))
+                .serverConfig(c -> c.port(port))
                 .handlers(chain -> chain
                         .get(ctx -> printResource(ctx, "/index.html", "text/html"))
                         .get("now", ctx -> ctx.render(ZonedDateTime.now() + "\n"))));

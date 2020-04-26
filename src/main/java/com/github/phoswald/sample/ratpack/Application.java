@@ -10,6 +10,9 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
+
 import org.apache.log4j.Logger;
 
 import com.github.phoswald.sample.ratpack.sample.EchoRequest;
@@ -17,6 +20,7 @@ import com.github.phoswald.sample.ratpack.sample.SampleController;
 import com.github.phoswald.sample.ratpack.sample.SampleResource;
 import com.github.phoswald.sample.ratpack.task.TaskController;
 import com.github.phoswald.sample.ratpack.task.TaskEntity;
+import com.github.phoswald.sample.ratpack.task.TaskRepository;
 import com.github.phoswald.sample.ratpack.task.TaskResource;
 
 import ratpack.form.Form;
@@ -27,6 +31,7 @@ import ratpack.server.RatpackServer;
 public class Application {
 
     private static final Logger logger = Logger.getLogger(Application.class);
+    private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("taskDS");
 
     public static void main(String[] args) throws Exception {
         int port = Integer.parseInt(System.getProperty("app.http.port", "8080"));
@@ -42,25 +47,37 @@ public class Application {
                         .get("rest/pages/sample", createHtmlHandler(() -> new SampleController().getSamplePage()))
 
                         .path("rest/tasks", ctx2 -> ctx2.byMethod(chain2 -> chain2
-                                .get(createJsonHandler(() -> new TaskResource().getTasks()))
-                                .post(createJsonHandler(TaskEntity.class, req -> new TaskResource().postTasks(req)))
+                                .get(createJsonHandler(() -> createTaskResource().getTasks()))
+                                .post(createJsonHandler(TaskEntity.class, req -> createTaskResource().postTasks(req)))
                         ))
                         .path("rest/tasks/:id", ctx2 -> ctx2.byMethod(chain2 -> chain2
-                                .get(createJsonHandlerEx(ctx -> new TaskResource().getTask(ctx.getPathTokens().get("id"))))
-                                .put(createJsonHandlerEx(TaskEntity.class, (ctx, req) -> new TaskResource().putTask(ctx.getPathTokens().get("id"), req)))
-                                .delete(createJsonHandlerEx(ctx -> new TaskResource().deleteTask(ctx.getPathTokens().get("id"))))
+                                .get(createJsonHandlerEx(ctx -> createTaskResource().getTask(ctx.getPathTokens().get("id"))))
+                                .put(createJsonHandlerEx(TaskEntity.class, (ctx, req) -> createTaskResource().putTask(ctx.getPathTokens().get("id"), req)))
+                                .delete(createJsonHandlerEx(ctx -> createTaskResource().deleteTask(ctx.getPathTokens().get("id"))))
                         ))
 
                         .path("rest/pages/tasks", ctx2 -> ctx2.byMethod(chain2 -> chain2
-                                .get(createHtmlHandler(() -> new TaskController().getTasksPage()))
-                                .post(createHtmlFormHandler(form -> new TaskController().postTasksPage(form.get("title"), form.get("description"))))
+                                .get(createHtmlHandler(() -> createTaskController().getTasksPage()))
+                                .post(createHtmlFormHandler(form -> createTaskController().postTasksPage(form.get("title"), form.get("description"))))
                          ))
                         .path("rest/pages/tasks/:id", ctx2 -> ctx2.byMethod(chain2 -> chain2
-                                .get(createHtmlHandlerEx(ctx -> new TaskController().getTaskPage(ctx.getPathTokens().get("id"), ctx.getRequest().getQueryParams().get("action"))))
-                                .post(createHtmlFormHandlerEx((ctx, form) -> new TaskController().postTaskPage(ctx.getPathTokens().get("id"), form.get("action"), form.get("title"), form.get("description"), form.get("done"))))
+                                .get(createHtmlHandlerEx(ctx -> createTaskController().getTaskPage(ctx.getPathTokens().get("id"), ctx.getRequest().getQueryParams().get("action"))))
+                                .post(createHtmlFormHandlerEx((ctx, form) -> createTaskController().postTaskPage(ctx.getPathTokens().get("id"), form.get("action"), form.get("title"), form.get("description"), form.get("done"))))
                         ))
                 )
         );
+    }
+
+    private static TaskResource createTaskResource()  {
+        return new TaskResource(createTaskRepository());
+    }
+
+    private static TaskController createTaskController() {
+        return new TaskController(createTaskRepository());
+    }
+
+    private static TaskRepository createTaskRepository() {
+        return new TaskRepository(emf.createEntityManager());
     }
 
     private static Handler createHandler(Supplier<Object> response) {

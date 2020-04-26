@@ -6,12 +6,20 @@ import java.util.Objects;
 
 import org.apache.log4j.Logger;
 
+import com.github.phoswald.sample.ratpack.task.TaskRepository.Transaction;
+
 public class TaskController {
 
     private static final Logger logger = Logger.getLogger(TaskController.class);
 
+    private final TaskRepository repository;
+
+    public TaskController(TaskRepository repository) {
+        this.repository = repository;
+    }
+
     public String getTasksPage() {
-        try(TaskRepository repository = TaskRepository.openReadOnly()) {
+        try(Transaction txn = repository.openTransaction()) {
             List<TaskEntity> entities = repository.selectAllTasks();
             List<TaskViewModel> viewModel = TaskViewModel.newList(entities);
             return new TaskListView().render(viewModel);
@@ -22,7 +30,7 @@ public class TaskController {
             String title, //
             String description) {
         logger.info("Received from with title=" + title + ", description=" + description);
-        try(TaskRepository repository = TaskRepository.openReadWrite()) {
+        try(Transaction txn = repository.openTransaction()) {
             TaskEntity entity = new TaskEntity();
             entity.setNewTaskId();
             entity.setUserId("guest");
@@ -38,7 +46,7 @@ public class TaskController {
     public String getTaskPage( //
             String id, //
             String action) {
-        try(TaskRepository repository = TaskRepository.openReadOnly()) {
+        try(Transaction txn = repository.openTransaction()) {
             TaskEntity entity = repository.selectTaskById(id);
             TaskViewModel viewModel = new TaskViewModel(entity);
             if (Objects.equals(action, "edit")) {
@@ -56,7 +64,7 @@ public class TaskController {
             String description, //
             String done) {
         logger.info("Received from with id=" + id + ", action=" + action + ", title=" + title + ", description=" + description + ", done=" + done);
-        try(TaskRepository repository = TaskRepository.openReadWrite()) {
+        try(Transaction txn = repository.openTransaction()) {
             TaskEntity entity = repository.selectTaskById(id);
             if (Objects.equals(action, "delete")) {
                 repository.deleteTask(entity);

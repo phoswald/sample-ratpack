@@ -3,40 +3,29 @@ package com.github.phoswald.sample.ratpack.task;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
 import javax.persistence.TypedQuery;
 
 public class TaskRepository implements AutoCloseable {
 
-    private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("taskDS");
-
     private final EntityManager em;
 
-    private TaskRepository(boolean txn) {
-        em = emf.createEntityManager();
-        if(txn) {
-            em.getTransaction().begin();
-        }
+    public TaskRepository(EntityManager em) {
+        this.em = em;
     }
 
-    public static TaskRepository openReadOnly() {
-        return new TaskRepository(false);
-    }
-
-    public static TaskRepository openReadWrite() {
-        return new TaskRepository(true);
+    public Transaction openTransaction() {
+        em.getTransaction().begin();
+        return new Transaction() {
+            @Override
+            public void close() {
+                em.getTransaction().commit();
+            }
+        };
     }
 
     @Override
     public void close() {
-        try {
-            if(em.getTransaction().isActive()) {
-                em.getTransaction().commit();
-            }
-        } finally {
-            em.close();
-        }
+        em.close();
     }
 
     public List<TaskEntity> selectAllTasks() {
@@ -59,5 +48,10 @@ public class TaskRepository implements AutoCloseable {
 
     public void updateChanges() {
         em.flush();
+    }
+
+    public static interface Transaction extends AutoCloseable {
+        @Override
+        public void close();
     }
 }

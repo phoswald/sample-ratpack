@@ -3,17 +3,25 @@ package com.github.phoswald.sample.ratpack.task;
 import java.time.Instant;
 import java.util.List;
 
+import com.github.phoswald.sample.ratpack.task.TaskRepository.Transaction;
+
 public class TaskResource {
 
+    private final TaskRepository repository;
+
+    public TaskResource(TaskRepository repository) {
+        this.repository = repository;
+    }
+
     public List<TaskEntity> getTasks() {
-        try(TaskRepository repository = TaskRepository.openReadOnly()) {
+        try(Transaction txn = repository.openTransaction()) {
             List<TaskEntity> entities = repository.selectAllTasks();
             return entities;
         }
     }
 
     public TaskEntity postTasks(TaskEntity request) {
-        try(TaskRepository repository = TaskRepository.openReadWrite()) {
+        try(Transaction txn = repository.openTransaction()) {
             TaskEntity entity = new TaskEntity();
             entity.setNewTaskId();
             entity.setUserId("guest");
@@ -27,14 +35,14 @@ public class TaskResource {
     }
 
     public TaskEntity getTask(String id) {
-        try(TaskRepository repository = TaskRepository.openReadOnly()) {
+        try(Transaction txn = repository.openTransaction()) {
             TaskEntity entity = repository.selectTaskById(id);
             return entity;
         }
     }
 
     public TaskEntity putTask(String id, TaskEntity request) {
-        try(TaskRepository repository = TaskRepository.openReadWrite()) {
+        try(Transaction txn = repository.openTransaction()) {
             TaskEntity entity = repository.selectTaskById(id);
             entity.setTimestamp(Instant.now());
             entity.setTitle(request.getTitle());
@@ -45,7 +53,7 @@ public class TaskResource {
     }
 
     public Void deleteTask(String id) {
-        try(TaskRepository repository = TaskRepository.openReadWrite()) {
+        try(Transaction txn = repository.openTransaction()) {
             TaskEntity entity = repository.selectTaskById(id);
             repository.deleteTask(entity);
             return null;

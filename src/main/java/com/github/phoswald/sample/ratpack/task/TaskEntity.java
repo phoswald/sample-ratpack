@@ -4,45 +4,26 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-
-@Entity
-@Table(name = "TASK")
-@NamedQueries({ //
-        @NamedQuery(name = TaskEntity.SELECT_ALL, query = "select t from TaskEntity t order by t.timestamp desc") })
 public class TaskEntity {
 
-    static final String SELECT_ALL = "TaskEntity.Select";
-
-    @Id
-    @Column(name = "TASK_ID")
     private String taskId;
 
-    @Column(name = "USER_ID")
     private String userId;
 
-    @Column(name = "TIMESTAMP")
-    @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
 
-    @Column(name = "TITLE")
     private String title;
 
-    @Column(name = "DESCRIPTION")
     private String description;
 
-    @Column(name = "DONE")
     private boolean done;
 
     public String getTaskId() {
         return taskId;
+    }
+
+    public void setTaskId(String taskId) {
+        this.taskId = taskId;
     }
 
     public void setNewTaskId() {

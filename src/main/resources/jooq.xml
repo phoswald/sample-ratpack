@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<configuration xmlns="http://www.jooq.org/xsd/jooq-codegen-3.13.0.xsd">
+  <jdbc>
+    <driver>org.h2.Driver</driver>
+    <url>jdbc:h2:mem:test;INIT=RUNSCRIPT FROM 'src/main/resources/schema.sql'</url>
+    <user>sa</user>
+    <password>sa</password>
+  </jdbc>
+
+  <generator>
+    <name>org.jooq.codegen.JavaGenerator</name>
+
+    <database>
+      <name>org.jooq.meta.h2.H2Database</name>
+      <inputSchema>PUBLIC</inputSchema>
+      <includes>.*</includes>
+      <excludes></excludes>
+    </database>
+
+    <target>
+      <packageName>com.github.phoswald.sample.ratpack.jooq</packageName>
+      <directory>target/generated-sources/jooq</directory>
+    </target>
+  </generator>
+</configuration>

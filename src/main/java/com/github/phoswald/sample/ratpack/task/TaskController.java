@@ -75,7 +75,7 @@ public class TaskController {
                 entity.setTitle(title);
                 entity.setDescription(description);
                 entity.setDone(Objects.equals(done, "on"));
-                repository.updateChanges();
+                repository.updateTask(entity);
             }
         }
         return getTaskPage(id, null);

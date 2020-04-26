@@ -5,7 +5,7 @@ Experiments with Ratpack, featuring:
 - Static web content
 - Dynamic web content using Thymeleaf
 - REST endpoints
-- H2 database using JPA and Hibernate
+- H2 database using JOOQ
 
 ## Run Standalone
 

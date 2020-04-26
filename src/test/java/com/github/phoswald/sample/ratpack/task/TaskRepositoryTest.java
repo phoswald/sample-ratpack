@@ -2,22 +2,24 @@ package com.github.phoswald.sample.ratpack.task;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.util.Collections;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.List;
 
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
-
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import com.github.phoswald.sample.ratpack.task.TaskRepository.Transaction;
 
 class TaskRepositoryTest {
 
-    private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("taskDS",
-            Collections.singletonMap("javax.persistence.jdbc.url", "jdbc:h2:mem:test"));
+    private final TaskRepository testee = new TaskRepository(createConnection());
 
-    private final TaskRepository testee = new TaskRepository(emf.createEntityManager());
+    @AfterEach
+    void cleanup() {
+        testee.close();
+    }
 
     @Test
     void testCrud() {
@@ -36,6 +38,14 @@ class TaskRepositoryTest {
             assertEquals(1, entites.size());
             assertEquals("Test Title", entites.get(0).getTitle());
             assertEquals("Test Description", entites.get(0).getDescription());
+        }
+    }
+
+    private Connection createConnection() {
+        try {
+            return DriverManager.getConnection("jdbc:h2:mem:test;INIT=RUNSCRIPT FROM 'src/main/resources/schema.sql'", "sa", "sa");
+        } catch (SQLException e) {
+            throw new IllegalStateException(e);
         }
     }
 }

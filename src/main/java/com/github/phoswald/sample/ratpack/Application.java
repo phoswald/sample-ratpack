@@ -3,12 +3,12 @@ package com.github.phoswald.sample.ratpack;
 import static ratpack.jackson.Jackson.fromJson;
 import static ratpack.jackson.Jackson.json;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
-
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
 
 import org.apache.log4j.Logger;
 
@@ -33,7 +33,6 @@ public class Application {
 
     private static final Logger logger = Logger.getLogger(Application.class);
     private static final int port = Integer.parseInt(System.getProperty("app.http.port", "8080"));
-    private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("taskDS");
 
     public static void main(String[] args) throws Exception {
         logger.info("sample-ratpack is starting, port=" + port);
@@ -131,6 +130,11 @@ public class Application {
     }
 
     private static TaskRepository createTaskRepository() {
-        return new TaskRepository(emf.createEntityManager());
+        try {
+            Connection conn = DriverManager.getConnection("jdbc:h2:./databases/task-db", "sa", "sa");
+            return new TaskRepository(conn);
+        } catch (SQLException e) {
+            throw new IllegalStateException(e);
+        }
     }
 }

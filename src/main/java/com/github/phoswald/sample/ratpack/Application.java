@@ -3,9 +3,6 @@ package com.github.phoswald.sample.ratpack;
 import static ratpack.jackson.Jackson.fromJson;
 import static ratpack.jackson.Jackson.json;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -24,60 +21,61 @@ import com.github.phoswald.sample.ratpack.task.TaskRepository;
 import com.github.phoswald.sample.ratpack.task.TaskResource;
 
 import ratpack.form.Form;
+import ratpack.func.Action;
+import ratpack.handling.Chain;
 import ratpack.handling.Context;
 import ratpack.handling.Handler;
+import ratpack.server.BaseDir;
 import ratpack.server.RatpackServer;
+import ratpack.server.ServerConfigBuilder;
 
 public class Application {
 
     private static final Logger logger = Logger.getLogger(Application.class);
+    private static final int port = Integer.parseInt(System.getProperty("app.http.port", "8080"));
     private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("taskDS");
 
     public static void main(String[] args) throws Exception {
-        int port = Integer.parseInt(System.getProperty("app.http.port", "8080"));
         logger.info("sample-ratpack is starting, port=" + port);
         RatpackServer.start(server -> server
-                .serverConfig(c -> c.port(port))
-                .handlers(chain -> chain
-                        .get("", ctx -> printResource(ctx, "/resources/index.html", "text/html"))
-                        .get("rest/sample/time", createHandler(() -> new SampleResource().getTime()))
-                        .get("rest/sample/config", createHandler(() -> new SampleResource().getConfig()))
-                        .post("rest/sample/echo", createJsonHandler(EchoRequest.class, req -> new SampleResource().postEcho(req)))
-
-                        .get("rest/pages/sample", createHtmlHandler(() -> new SampleController().getSamplePage()))
-
-                        .path("rest/tasks", ctx2 -> ctx2.byMethod(chain2 -> chain2
-                                .get(createJsonHandler(() -> createTaskResource().getTasks()))
-                                .post(createJsonHandler(TaskEntity.class, req -> createTaskResource().postTasks(req)))
-                        ))
-                        .path("rest/tasks/:id", ctx2 -> ctx2.byMethod(chain2 -> chain2
-                                .get(createJsonHandlerEx(ctx -> createTaskResource().getTask(ctx.getPathTokens().get("id"))))
-                                .put(createJsonHandlerEx(TaskEntity.class, (ctx, req) -> createTaskResource().putTask(ctx.getPathTokens().get("id"), req)))
-                                .delete(createJsonHandlerEx(ctx -> createTaskResource().deleteTask(ctx.getPathTokens().get("id"))))
-                        ))
-
-                        .path("rest/pages/tasks", ctx2 -> ctx2.byMethod(chain2 -> chain2
-                                .get(createHtmlHandler(() -> createTaskController().getTasksPage()))
-                                .post(createHtmlFormHandler(form -> createTaskController().postTasksPage(form.get("title"), form.get("description"))))
-                         ))
-                        .path("rest/pages/tasks/:id", ctx2 -> ctx2.byMethod(chain2 -> chain2
-                                .get(createHtmlHandlerEx(ctx -> createTaskController().getTaskPage(ctx.getPathTokens().get("id"), ctx.getRequest().getQueryParams().get("action"))))
-                                .post(createHtmlFormHandlerEx((ctx, form) -> createTaskController().postTaskPage(ctx.getPathTokens().get("id"), form.get("action"), form.get("title"), form.get("description"), form.get("done"))))
-                        ))
-                )
-        );
+                .serverConfig(createConfig())
+                .handlers(createRoutes()));
     }
 
-    private static TaskResource createTaskResource()  {
-        return new TaskResource(createTaskRepository());
+    private static Action<? super ServerConfigBuilder> createConfig() {
+        return config -> config
+                .port(port)
+                .baseDir(BaseDir.find("resources/.ratpack").toAbsolutePath());
     }
 
-    private static TaskController createTaskController() {
-        return new TaskController(createTaskRepository());
-    }
+    private static Action<? super Chain> createRoutes() {
+        return chain -> chain
+                .files(config -> config.indexFiles("index.html"))
+                //.get("", createResourceHandler("index.html", "text/html"))
+                .get("rest/sample/time", createHandler(() -> new SampleResource().getTime()))
+                .get("rest/sample/config", createHandler(() -> new SampleResource().getConfig()))
+                .post("rest/sample/echo", createJsonHandler(EchoRequest.class, req -> new SampleResource().postEcho(req)))
 
-    private static TaskRepository createTaskRepository() {
-        return new TaskRepository(emf.createEntityManager());
+                .get("rest/pages/sample", createHtmlHandler(() -> new SampleController().getSamplePage()))
+
+                .path("rest/tasks", ctx2 -> ctx2.byMethod(chain2 -> chain2
+                        .get(createJsonHandler(() -> createTaskResource().getTasks()))
+                        .post(createJsonHandler(TaskEntity.class, req -> createTaskResource().postTasks(req)))
+                ))
+                .path("rest/tasks/:id", ctx2 -> ctx2.byMethod(chain2 -> chain2
+                        .get(createJsonHandlerEx(ctx -> createTaskResource().getTask(ctx.getPathTokens().get("id"))))
+                        .put(createJsonHandlerEx(TaskEntity.class, (ctx, req) -> createTaskResource().putTask(ctx.getPathTokens().get("id"), req)))
+                        .delete(createJsonHandlerEx(ctx -> createTaskResource().deleteTask(ctx.getPathTokens().get("id"))))
+                ))
+
+                .path("rest/pages/tasks", ctx2 -> ctx2.byMethod(chain2 -> chain2
+                        .get(createHtmlHandler(() -> createTaskController().getTasksPage()))
+                        .post(createHtmlFormHandler(form -> createTaskController().postTasksPage(form.get("title"), form.get("description"))))
+                 ))
+                .path("rest/pages/tasks/:id", ctx2 -> ctx2.byMethod(chain2 -> chain2
+                        .get(createHtmlHandlerEx(ctx -> createTaskController().getTaskPage(ctx.getPathTokens().get("id"), ctx.getRequest().getQueryParams().get("action"))))
+                        .post(createHtmlFormHandlerEx((ctx, form) -> createTaskController().postTaskPage(ctx.getPathTokens().get("id"), form.get("action"), form.get("title"), form.get("description"), form.get("done"))))
+                ));
     }
 
     private static Handler createHandler(Supplier<Object> response) {
@@ -93,13 +91,11 @@ public class Application {
     }
 
     private static <R> Handler createJsonHandler(Class<R> requestClass, Function<R, Object> response) {
-        return ctx -> ctx.parse(fromJson(requestClass))
-                .then(request -> ctx.render(json(response.apply(request))));
+        return ctx -> ctx.parse(fromJson(requestClass)).then(request -> ctx.render(json(response.apply(request))));
     }
 
     private static <R> Handler createJsonHandlerEx(Class<R> requestClass, BiFunction<Context, R, Object> response) {
-        return ctx -> ctx.parse(fromJson(requestClass))
-                .then(request -> ctx.render(json(response.apply(ctx, request))));
+        return ctx -> ctx.parse(fromJson(requestClass)).then(request -> ctx.render(json(response.apply(ctx, request))));
     }
 
     private static Handler createHtmlHandler(Supplier<Object> response) {
@@ -111,34 +107,30 @@ public class Application {
     }
 
     private static Handler createHtmlFormHandler(Function<Form, Object> response) {
-        return ctx -> ctx.parse(Form.class)
-                .then(form -> ctx.header("content-type", "text/html").render(response.apply(form)));
+        return ctx -> ctx.parse(Form.class).then(form -> ctx.header("content-type", "text/html").render(response.apply(form)));
     }
 
     private static Handler createHtmlFormHandlerEx(BiFunction<Context, Form, Object> response) {
-        return ctx -> ctx.parse(Form.class)
-                .then(form -> {
-                    Object result = response.apply(ctx, form);
-                    if(result instanceof String && ((String) result).startsWith("REDIRECT:")) { // TODO refactor redirect
-                        ctx.redirect(((String) result).substring(9));
-                    } else {
-                        ctx.header("content-type", "text/html").render(result);
-                    }
-                });
+        return ctx -> ctx.parse(Form.class).then(form -> sendHtmlOrRedirect(ctx, response.apply(ctx, form)));
     }
 
-    private static void printResource(Context ctx, String name, String contentType) {
-       try(InputStream stm = Application.class.getResourceAsStream(name)) {
-          ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-          int current;
-          while((current = stm.read()) != -1) {
-             bytes.write(current);
-          }
-          ctx.getResponse().send(contentType, bytes.toByteArray());
-       } catch (IOException e) {
-          logger.error("Unexpected trouble", e);
-          ctx.getResponse().status(500);
-          ctx.render("");
-       }
+    private static void sendHtmlOrRedirect(Context ctx, Object result) {
+        if(result instanceof String && ((String) result).startsWith("REDIRECT:")) { // TODO refactor redirect
+            ctx.redirect(((String) result).substring(9));
+        } else {
+            ctx.header("content-type", "text/html").render(result);
+        }
+    }
+
+    private static TaskResource createTaskResource()  {
+        return new TaskResource(createTaskRepository());
+    }
+
+    private static TaskController createTaskController() {
+        return new TaskController(createTaskRepository());
+    }
+
+    private static TaskRepository createTaskRepository() {
+        return new TaskRepository(emf.createEntityManager());
     }
 }

@@ -6,6 +6,7 @@ import static ratpack.jackson.Jackson.json;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -32,7 +33,7 @@ import ratpack.server.ServerConfigBuilder;
 public class Application {
 
     private static final Logger logger = Logger.getLogger(Application.class);
-    private static final int port = Integer.parseInt(System.getProperty("app.http.port", "8080"));
+    private static final int port = Integer.parseInt(Optional.ofNullable(System.getenv("APP_HTTP_PORT")).orElse("8080"));
 
     public static void main(String[] args) throws Exception {
         logger.info("sample-ratpack is starting, port=" + port);

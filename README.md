@@ -1,6 +1,6 @@
 # sample-ratpack
 
-Experiments with Ratpack, featuring:
+Experiments with Ratpack and Docker, featuring:
 
 - Static web content
 - Dynamic web content using Thymeleaf
@@ -11,10 +11,20 @@ Experiments with Ratpack, featuring:
 
 ~~~
 $ mvn clean verify
-$ java -cp 'target/*:target/lib/*' \
-  -Dapp.http.port=8080 \
-  -Dapp.sample.config=SampleConfigValue \
-  com.github.phoswald.sample.ratpack.Application
+$ export APP_HTTP_PORT=8080
+$ export APP_SAMPLE_CONFIG=ValueFromShell
+$ java -cp 'target/*:target/lib/*' com.github.phoswald.sample.ratpack.Application
+~~~
+
+## Run with Docker
+
+~~~
+$ mvn clean verify -P docker
+$ docker run -it --name sample-ratpack-jooq --rm \
+  -p 8080:8080 \
+  -e APP_SAMPLE_CONFIG=ValueFromDockerRun \
+  -v "$(pwd)/../databases":/usr/local/application/databases \
+  sample-ratpack-jooq:0.1.0-SNAPSHOT
 ~~~
 
 # URLs
@@ -51,4 +61,4 @@ $ curl 'http://localhost:8080/rest/tasks/5b89f266-c566-4d1f-8545-451bc443cf26' -
 
 - XML instead of JSON
 - Refactor HTTP stuff, redirect
-- Docker and/or GraalVM
+- GraalVM

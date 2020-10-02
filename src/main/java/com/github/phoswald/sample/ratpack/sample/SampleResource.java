@@ -2,10 +2,11 @@ package com.github.phoswald.sample.ratpack.sample;
 
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 
 public class SampleResource {
 
-    private final String sampleConfig = System.getProperty("app.sample.config");
+    private final String sampleConfig = Optional.ofNullable(System.getenv("APP_SAMPLE_CONFIG")).orElse("Undefined");
 
     public String getTime() {
         return ZonedDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME);

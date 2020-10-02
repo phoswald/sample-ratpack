@@ -51,13 +51,10 @@ public class Application {
     private static Action<? super Chain> createRoutes() {
         return chain -> chain
                 .files(config -> config.indexFiles("index.html"))
-                //.get("", createResourceHandler("index.html", "text/html"))
                 .get("rest/sample/time", createHandler(() -> new SampleResource().getTime()))
                 .get("rest/sample/config", createHandler(() -> new SampleResource().getConfig()))
                 .post("rest/sample/echo", createJsonHandler(EchoRequest.class, req -> new SampleResource().postEcho(req)))
-
                 .get("rest/pages/sample", createHtmlHandler(() -> new SampleController().getSamplePage()))
-
                 .path("rest/tasks", ctx2 -> ctx2.byMethod(chain2 -> chain2
                         .get(createJsonHandler(() -> createTaskResource().getTasks()))
                         .post(createJsonHandler(TaskEntity.class, req -> createTaskResource().postTasks(req)))
@@ -67,7 +64,6 @@ public class Application {
                         .put(createJsonHandlerEx(TaskEntity.class, (ctx, req) -> createTaskResource().putTask(ctx.getPathTokens().get("id"), req)))
                         .delete(createJsonHandlerEx(ctx -> createTaskResource().deleteTask(ctx.getPathTokens().get("id"))))
                 ))
-
                 .path("rest/pages/tasks", ctx2 -> ctx2.byMethod(chain2 -> chain2
                         .get(createHtmlHandler(() -> createTaskController().getTasksPage()))
                         .post(createHtmlFormHandler(form -> createTaskController().postTasksPage(form.get("title"), form.get("description"))))

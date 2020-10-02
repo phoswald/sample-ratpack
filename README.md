@@ -41,6 +41,12 @@ $ curl 'http://localhost:8080/rest/tasks/5b89f266-c566-4d1f-8545-451bc443cf26' -
 $ curl 'http://localhost:8080/rest/tasks/5b89f266-c566-4d1f-8545-451bc443cf26' -i -X DELETE
 ~~~
 
+# Database setup
+
+1.  Start H2 with `$ java -jar target/lib/h2-1.4.200.jar` and open UI in browser.
+2.  Open database `jdbc:h2:./databases/task-db` with username `sa` password `sa`.
+3.  Execute script `src/main/resources/schema.sql`. 
+
 # TODOs
 
 - XML instead of JSON

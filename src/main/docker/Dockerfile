@@ -1,0 +1,17 @@
+FROM openjdk:8-jre-alpine
+
+ENV TZ                Europe/Zurich
+ENV LANG              de_CH.UTF-8
+ENV LC_ALL            de_CH.UTF-8
+ENV JAVA_TOOL_OPTIONS -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=2
+ENV APP_HTTP_PORT     8080
+ENV APP_SAMPLE_CONFIG ValueFromDockerfile
+
+# Define user/group (optional)
+USER daemon:daemon
+
+# Copy application and define command
+WORKDIR /usr/local/application/
+EXPOSE 8080
+COPY maven .
+CMD ["java", "-cp", "./*", "com.github.phoswald.sample.ratpack.Application"]

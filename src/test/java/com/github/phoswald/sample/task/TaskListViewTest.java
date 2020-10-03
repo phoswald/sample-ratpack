@@ -1,4 +1,4 @@
-package com.github.phoswald.sample.ratpack.task;
+package com.github.phoswald.sample.task;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -7,6 +7,10 @@ import java.util.Collections;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+
+import com.github.phoswald.sample.task.TaskEntity;
+import com.github.phoswald.sample.task.TaskListView;
+import com.github.phoswald.sample.task.TaskViewModel;
 
 class TaskListViewTest {
 

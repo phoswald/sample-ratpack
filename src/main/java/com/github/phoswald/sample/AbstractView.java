@@ -1,4 +1,4 @@
-package com.github.phoswald.sample.ratpack;
+package com.github.phoswald.sample;
 
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;

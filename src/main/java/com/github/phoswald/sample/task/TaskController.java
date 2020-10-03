@@ -1,4 +1,4 @@
-package com.github.phoswald.sample.ratpack.task;
+package com.github.phoswald.sample.task;
 
 import java.time.Instant;
 import java.util.List;
@@ -6,7 +6,7 @@ import java.util.Objects;
 
 import org.apache.log4j.Logger;
 
-import com.github.phoswald.sample.ratpack.task.TaskRepository.Transaction;
+import com.github.phoswald.sample.task.TaskRepository.Transaction;
 
 public class TaskController {
 

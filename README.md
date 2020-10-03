@@ -32,12 +32,9 @@ $ docker run -it --name sample-ratpack --rm \
 - http://localhost:8080/
 
 ~~~
-$ curl 'http://localhost:8080/rest/sample/time'
-$ curl 'http://localhost:8080/rest/sample/config'
-$ curl 'http://localhost:8080/rest/sample/echo' -i -X POST \
-  -H 'content-type: text/xml' \
-  -d '<EchoRequest><input>This is CURL</input></EchoRequest>'
-$ curl 'http://localhost:8080/rest/sample/echo' -i -X POST \
+$ curl 'http://localhost:8080/rest/sample/time' -i
+$ curl 'http://localhost:8080/rest/sample/config' -i
+$ curl 'http://localhost:8080/rest/sample/echo-json' -i -X POST \
   -H 'content-type: application/json' \
   -d '{"input":"This is CURL"}'
 $ curl 'http://localhost:8080/rest/tasks' -i
@@ -50,15 +47,3 @@ $ curl 'http://localhost:8080/rest/tasks/5b89f266-c566-4d1f-8545-451bc443cf26' -
   -d '{"title":"Some updated task","description":"This is still CURL","done":false}'
 $ curl 'http://localhost:8080/rest/tasks/5b89f266-c566-4d1f-8545-451bc443cf26' -i -X DELETE
 ~~~
-
-# Database setup
-
-1.  Start H2 with `$ java -jar target/lib/h2-1.4.200.jar` and open UI in browser.
-2.  Open database `jdbc:h2:./databases/task-db` with username `sa` password `sa`.
-3.  Execute script `src/main/resources/schema.sql`. 
-
-# TODOs
-
-- XML instead of JSON
-- Refactor HTTP stuff, redirect
-- GraalVM

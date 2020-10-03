@@ -1,4 +1,4 @@
-package com.github.phoswald.sample.ratpack.task;
+package com.github.phoswald.sample.task;
 
 import java.time.Instant;
 import java.time.LocalDateTime;

@@ -13,13 +13,13 @@ import javax.persistence.Persistence;
 
 import org.apache.log4j.Logger;
 
-import com.github.phoswald.sample.ratpack.sample.EchoRequest;
-import com.github.phoswald.sample.ratpack.sample.SampleController;
-import com.github.phoswald.sample.ratpack.sample.SampleResource;
-import com.github.phoswald.sample.ratpack.task.TaskController;
-import com.github.phoswald.sample.ratpack.task.TaskEntity;
-import com.github.phoswald.sample.ratpack.task.TaskRepository;
-import com.github.phoswald.sample.ratpack.task.TaskResource;
+import com.github.phoswald.sample.sample.EchoRequest;
+import com.github.phoswald.sample.sample.SampleController;
+import com.github.phoswald.sample.sample.SampleResource;
+import com.github.phoswald.sample.task.TaskController;
+import com.github.phoswald.sample.task.TaskEntity;
+import com.github.phoswald.sample.task.TaskRepository;
+import com.github.phoswald.sample.task.TaskResource;
 
 import ratpack.form.Form;
 import ratpack.func.Action;
@@ -54,15 +54,15 @@ public class Application {
                 .files(config -> config.indexFiles("index.html"))
                 .get("rest/sample/time", createHandler(() -> new SampleResource().getTime()))
                 .get("rest/sample/config", createHandler(() -> new SampleResource().getConfig()))
-                .post("rest/sample/echo", createJsonHandler(EchoRequest.class, req -> new SampleResource().postEcho(req)))
+                .post("rest/sample/echo-json", createJsonHandler(EchoRequest.class, reqBody -> new SampleResource().postEcho(reqBody)))
                 .get("rest/pages/sample", createHtmlHandler(() -> new SampleController().getSamplePage()))
                 .path("rest/tasks", ctx2 -> ctx2.byMethod(chain2 -> chain2
                         .get(createJsonHandler(() -> createTaskResource().getTasks()))
-                        .post(createJsonHandler(TaskEntity.class, req -> createTaskResource().postTasks(req)))
+                        .post(createJsonHandler(TaskEntity.class, reqBody -> createTaskResource().postTasks(reqBody)))
                 ))
                 .path("rest/tasks/:id", ctx2 -> ctx2.byMethod(chain2 -> chain2
                         .get(createJsonHandlerEx(ctx -> createTaskResource().getTask(ctx.getPathTokens().get("id"))))
-                        .put(createJsonHandlerEx(TaskEntity.class, (ctx, req) -> createTaskResource().putTask(ctx.getPathTokens().get("id"), req)))
+                        .put(createJsonHandlerEx(TaskEntity.class, (ctx, reqBody) -> createTaskResource().putTask(ctx.getPathTokens().get("id"), reqBody)))
                         .delete(createJsonHandlerEx(ctx -> createTaskResource().deleteTask(ctx.getPathTokens().get("id"))))
                 ))
                 .path("rest/pages/tasks", ctx2 -> ctx2.byMethod(chain2 -> chain2
@@ -75,40 +75,42 @@ public class Application {
                 ));
     }
 
-    private static Handler createHandler(Supplier<Object> response) {
-        return ctx -> ctx.render(response.get());
+    // TODO support XML, not only JSON
+
+    private static Handler createHandler(Supplier<Object> callback) {
+        return ctx -> ctx.render(callback.get());
     }
 
-    private static <R> Handler createJsonHandler(Supplier<Object> response) {
-        return ctx -> ctx.render(json(response.get()));
+    private static <R> Handler createJsonHandler(Supplier<Object> callback) {
+        return ctx -> ctx.render(json(callback.get()));
     }
 
-    private static <R> Handler createJsonHandlerEx(Function<Context, Object> response) {
-        return ctx -> ctx.render(json(response.apply(ctx)));
+    private static <R> Handler createJsonHandlerEx(Function<Context, Object> callback) {
+        return ctx -> ctx.render(json(callback.apply(ctx)));
     }
 
-    private static <R> Handler createJsonHandler(Class<R> requestClass, Function<R, Object> response) {
-        return ctx -> ctx.parse(fromJson(requestClass)).then(request -> ctx.render(json(response.apply(request))));
+    private static <R> Handler createJsonHandler(Class<R> reqClass, Function<R, Object> callback) {
+        return ctx -> ctx.parse(fromJson(reqClass)).then(reqBody -> ctx.render(json(callback.apply(reqBody))));
     }
 
-    private static <R> Handler createJsonHandlerEx(Class<R> requestClass, BiFunction<Context, R, Object> response) {
-        return ctx -> ctx.parse(fromJson(requestClass)).then(request -> ctx.render(json(response.apply(ctx, request))));
+    private static <R> Handler createJsonHandlerEx(Class<R> reqClass, BiFunction<Context, R, Object> callback) {
+        return ctx -> ctx.parse(fromJson(reqClass)).then(reqBody -> ctx.render(json(callback.apply(ctx, reqBody))));
     }
 
-    private static Handler createHtmlHandler(Supplier<Object> response) {
-        return ctx -> ctx.header("content-type", "text/html").render(response.get());
+    private static Handler createHtmlHandler(Supplier<Object> callback) {
+        return ctx -> ctx.header("content-type", "text/html").render(callback.get());
     }
 
-    private static Handler createHtmlHandlerEx(Function<Context, Object> response) {
-        return ctx -> ctx.header("content-type", "text/html").render(response.apply(ctx));
+    private static Handler createHtmlHandlerEx(Function<Context, Object> callback) {
+        return ctx -> ctx.header("content-type", "text/html").render(callback.apply(ctx));
     }
 
-    private static Handler createHtmlFormHandler(Function<Form, Object> response) {
-        return ctx -> ctx.parse(Form.class).then(form -> ctx.header("content-type", "text/html").render(response.apply(form)));
+    private static Handler createHtmlFormHandler(Function<Form, Object> callback) {
+        return ctx -> ctx.parse(Form.class).then(form -> ctx.header("content-type", "text/html").render(callback.apply(form)));
     }
 
-    private static Handler createHtmlFormHandlerEx(BiFunction<Context, Form, Object> response) {
-        return ctx -> ctx.parse(Form.class).then(form -> sendHtmlOrRedirect(ctx, response.apply(ctx, form)));
+    private static Handler createHtmlFormHandlerEx(BiFunction<Context, Form, Object> callback) {
+        return ctx -> ctx.parse(Form.class).then(form -> sendHtmlOrRedirect(ctx, callback.apply(ctx, form)));
     }
 
     private static void sendHtmlOrRedirect(Context ctx, Object result) {

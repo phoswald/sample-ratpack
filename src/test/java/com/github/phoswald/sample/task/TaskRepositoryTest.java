@@ -10,8 +10,6 @@ import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import com.github.phoswald.sample.task.TaskEntity;
-import com.github.phoswald.sample.task.TaskRepository;
 import com.github.phoswald.sample.task.TaskRepository.Transaction;
 
 class TaskRepositoryTest {

@@ -8,10 +8,6 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import com.github.phoswald.sample.task.TaskEntity;
-import com.github.phoswald.sample.task.TaskListView;
-import com.github.phoswald.sample.task.TaskViewModel;
-
 class TaskListViewTest {
 
     private final TaskListView testee = new TaskListView();

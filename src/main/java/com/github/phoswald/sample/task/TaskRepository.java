@@ -1,6 +1,6 @@
 package com.github.phoswald.sample.task;
 
-import static com.github.phoswald.sample.ratpack.jooq.Tables.TASK;
+import static com.github.phoswald.sample.jooq.Tables.TASK;
 
 import java.sql.Connection;
 import java.sql.SQLException;

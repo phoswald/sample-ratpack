@@ -10,8 +10,6 @@ import javax.persistence.Persistence;
 
 import org.junit.jupiter.api.Test;
 
-import com.github.phoswald.sample.task.TaskEntity;
-import com.github.phoswald.sample.task.TaskRepository;
 import com.github.phoswald.sample.task.TaskRepository.Transaction;
 
 class TaskRepositoryTest {

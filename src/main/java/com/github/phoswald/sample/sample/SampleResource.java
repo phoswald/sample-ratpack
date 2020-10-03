@@ -1,4 +1,4 @@
-package com.github.phoswald.sample.ratpack.sample;
+package com.github.phoswald.sample.sample;
 
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;

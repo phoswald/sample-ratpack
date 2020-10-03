@@ -1,4 +1,4 @@
-package com.github.phoswald.sample.ratpack.task;
+package com.github.phoswald.sample.task;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -10,7 +10,9 @@ import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import com.github.phoswald.sample.ratpack.task.TaskRepository.Transaction;
+import com.github.phoswald.sample.task.TaskEntity;
+import com.github.phoswald.sample.task.TaskRepository;
+import com.github.phoswald.sample.task.TaskRepository.Transaction;
 
 class TaskRepositoryTest {
 

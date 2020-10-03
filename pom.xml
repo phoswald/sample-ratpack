@@ -15,28 +15,34 @@
   </properties>
 
   <dependencies>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-log4j12</artifactId>
-      <version>1.7.25</version>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.ratpack</groupId>
-      <artifactId>ratpack-core</artifactId>
-      <version>1.7.6</version>
-    </dependency>
+    <!-- Logging -->
     <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
       <version>1.2.17</version>
     </dependency>
     <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+      <version>1.7.25</version>
+      <scope>runtime</scope>
+    </dependency>
+
+    <!-- Web Server -->
+    <dependency>
+      <groupId>io.ratpack</groupId>
+      <artifactId>ratpack-core</artifactId>
+      <version>1.7.6</version>
+    </dependency>
+
+    <!-- Templating -->
+    <dependency>
       <groupId>org.thymeleaf</groupId>
       <artifactId>thymeleaf</artifactId>
       <version>3.0.11.RELEASE</version>
     </dependency>
-    
+
+    <!-- Database -->
     <dependency>
       <groupId>org.jooq</groupId>
       <artifactId>jooq</artifactId>
@@ -58,7 +64,8 @@
       <version>1.4.200</version>
       <scope>runtime</scope>
     </dependency>
-    
+
+    <!-- Testing -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-engine</artifactId>

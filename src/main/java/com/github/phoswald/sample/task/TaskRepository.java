@@ -1,4 +1,4 @@
-package com.github.phoswald.sample.ratpack.task;
+package com.github.phoswald.sample.task;
 
 import static com.github.phoswald.sample.ratpack.jooq.Tables.TASK;
 

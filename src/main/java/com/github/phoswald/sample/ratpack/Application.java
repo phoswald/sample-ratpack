@@ -11,7 +11,8 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.github.phoswald.sample.sample.EchoRequest;
 import com.github.phoswald.sample.sample.SampleController;
@@ -32,7 +33,7 @@ import ratpack.server.ServerConfigBuilder;
 
 public class Application {
 
-    private static final Logger logger = Logger.getLogger(Application.class);
+    private static final Logger logger = LogManager.getLogger();
     private static final int port = Integer.parseInt(Optional.ofNullable(System.getenv("APP_HTTP_PORT")).orElse("8080"));
 
     public static void main(String[] args) throws Exception {

@@ -4,13 +4,14 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.github.phoswald.sample.task.TaskRepository.Transaction;
 
 public class TaskController {
 
-    private static final Logger logger = Logger.getLogger(TaskController.class);
+    private static final Logger logger = LogManager.getLogger();
 
     private final TaskRepository repository;
 

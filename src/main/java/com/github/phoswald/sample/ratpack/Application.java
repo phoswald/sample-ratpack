@@ -3,7 +3,8 @@ package com.github.phoswald.sample.ratpack;
 import static ratpack.jackson.Jackson.fromJson;
 import static ratpack.jackson.Jackson.json;
 
-import java.util.Optional;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -14,6 +15,7 @@ import javax.persistence.Persistence;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.github.phoswald.sample.ConfigProvider;
 import com.github.phoswald.sample.sample.EchoRequest;
 import com.github.phoswald.sample.sample.SampleController;
 import com.github.phoswald.sample.sample.SampleResource;
@@ -34,8 +36,9 @@ import ratpack.server.ServerConfigBuilder;
 public class Application {
 
     private static final Logger logger = LogManager.getLogger();
-    private static final int port = Integer.parseInt(Optional.ofNullable(System.getenv("APP_HTTP_PORT")).orElse("8080"));
-    private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("taskDS");
+    private static final ConfigProvider config = new ConfigProvider();
+    private static final int port = Integer.parseInt(config.getConfigProperty("app.http.port").orElse("8080"));
+    private static final EntityManagerFactory emf = createEntityManagerFactory();
 
     public static void main(String[] args) throws Exception {
         logger.info("sample-ratpack is starting, port=" + port);
@@ -53,24 +56,24 @@ public class Application {
     private static Action<? super Chain> createRoutes() {
         return chain -> chain
                 .files(config -> config.indexFiles("index.html"))
-                .get("rest/sample/time", createHandler(() -> new SampleResource().getTime()))
-                .get("rest/sample/config", createHandler(() -> new SampleResource().getConfig()))
-                .post("rest/sample/echo-json", createJsonHandler(EchoRequest.class, reqBody -> new SampleResource().postEcho(reqBody)))
-                .get("rest/pages/sample", createHtmlHandler(() -> new SampleController().getSamplePage()))
-                .path("rest/tasks", ctx2 -> ctx2.byMethod(chain2 -> chain2
+                .get("app/rest/sample/time", createHandler(() -> new SampleResource().getTime()))
+                .get("app/rest/sample/config", createHandler(() -> new SampleResource().getConfig()))
+                .post("app/rest/sample/echo-json", createJsonHandler(EchoRequest.class, reqBody -> new SampleResource().postEcho(reqBody)))
+                .get("app/pages/sample", createHtmlHandler(() -> new SampleController().getSamplePage()))
+                .path("app/rest/tasks", ctx2 -> ctx2.byMethod(chain2 -> chain2
                         .get(createJsonHandler(() -> createTaskResource().getTasks()))
                         .post(createJsonHandler(TaskEntity.class, reqBody -> createTaskResource().postTasks(reqBody)))
                 ))
-                .path("rest/tasks/:id", ctx2 -> ctx2.byMethod(chain2 -> chain2
+                .path("app/rest/tasks/:id", ctx2 -> ctx2.byMethod(chain2 -> chain2
                         .get(createJsonHandlerEx(ctx -> createTaskResource().getTask(ctx.getPathTokens().get("id"))))
                         .put(createJsonHandlerEx(TaskEntity.class, (ctx, reqBody) -> createTaskResource().putTask(ctx.getPathTokens().get("id"), reqBody)))
                         .delete(createJsonHandlerEx(ctx -> createTaskResource().deleteTask(ctx.getPathTokens().get("id"))))
                 ))
-                .path("rest/pages/tasks", ctx2 -> ctx2.byMethod(chain2 -> chain2
+                .path("app/pages/tasks", ctx2 -> ctx2.byMethod(chain2 -> chain2
                         .get(createHtmlHandler(() -> createTaskController().getTasksPage()))
                         .post(createHtmlFormHandler(form -> createTaskController().postTasksPage(form.get("title"), form.get("description"))))
                  ))
-                .path("rest/pages/tasks/:id", ctx2 -> ctx2.byMethod(chain2 -> chain2
+                .path("app/pages/tasks/:id", ctx2 -> ctx2.byMethod(chain2 -> chain2
                         .get(createHtmlHandlerEx(ctx -> createTaskController().getTaskPage(ctx.getPathTokens().get("id"), ctx.getRequest().getQueryParams().get("action"))))
                         .post(createHtmlFormHandlerEx((ctx, form) -> createTaskController().postTaskPage(ctx.getPathTokens().get("id"), form.get("action"), form.get("title"), form.get("description"), form.get("done"))))
                 ));
@@ -131,6 +134,15 @@ public class Application {
     }
 
     private static TaskRepository createTaskRepository() {
-        return new TaskRepository(emf.createEntityManager());
+        return new TaskRepository(emf.createEntityManager()); // TODO review cleanup
+    }
+
+    private static EntityManagerFactory createEntityManagerFactory() {
+    	Map<String, String> props = new HashMap<>();
+    	config.getConfigProperty("app.jdbc.driver"  ).ifPresent(v -> props.put("javax.persistence.jdbc.driver", v));
+    	config.getConfigProperty("app.jdbc.url"     ).ifPresent(v -> props.put("javax.persistence.jdbc.url", v));
+    	config.getConfigProperty("app.jdbc.username").ifPresent(v -> props.put("javax.persistence.jdbc.user", v));
+    	config.getConfigProperty("app.jdbc.password").ifPresent(v -> props.put("javax.persistence.jdbc.password", v));
+    	return Persistence.createEntityManagerFactory("taskDS", props);
     }
 }

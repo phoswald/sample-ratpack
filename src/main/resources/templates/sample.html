@@ -23,10 +23,20 @@
     <div class="container">
       <h2 class="my-4">Greeting</h2>
       <div class="alert alert-success">
-        <span th:text="#{greeting}">Message</span>
+        <span th:text="#{greeting}">MESSAGE</span>
       </div>
-      <h2 class="my-4">Time</h2>
-      <p>The current time is <span th:text="${model.now}">Timestamp</span>.</p>
+      <h2 class="my-4">Config</h2>
+      <p>The current time is <span th:text="${model.now}">TIMESTAMP</span>.</p>
+      <table class="table table-sm">
+        <tr>
+          <th>Parameter</th>
+          <th>Value</th>
+        </tr>
+        <tr>
+          <td>app.sample.config</td>
+          <td th:text="${model.sampleConfig}">VALUE</td>
+        </tr>
+      </table>
       <h2 class="my-4">Environment Variables</h2>
       <table class="table table-sm">
         <tr>
@@ -34,8 +44,8 @@
           <th>Value</th>
         </tr>
         <tr th:each="e : ${model.env}">
-          <td><span th:text="${e.key}">KEY</span></td>
-          <td><span th:text="${e.value}">VALUE</span></td>
+          <td th:text="${e.key}">KEY</td>
+          <td th:text="${e.value}">VALUE</td>
         </tr>
       </table>
       <h2 class="my-4">System Properties</h2>
@@ -45,8 +55,8 @@
           <th>Value</th>
         </tr>
         <tr th:each="e : ${model.props}">
-          <td><span th:text="${e.key}">key</span></td>
-          <td><span th:text="${e.value}">value</span></td>
+          <td th:text="${e.key}">KEY</td>
+          <td th:text="${e.value}">VALUE</td>
         </tr>
       </table>
     </div>

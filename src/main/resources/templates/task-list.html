@@ -34,12 +34,8 @@
             <td>
               <input type="checkbox" name="done" th:checked="${task.done}" disabled="disabled">
             </td>
-            <td>      
-              <span th:text="${task.title}">Title</span>
-            </td>
-            <td>
-              <span th:text="${task.timestamp}">Timestamp</span>
-            </td>
+            <td th:text="${task.title}">TITLE</td>
+            <td th:text="${task.timestamp}">TIMESTAMP</td>
             <td>
               <a class="btn btn-secondary btn-sm btn-block" th:href="'tasks/' + ${task.taskId}">Details</a>
             </td>

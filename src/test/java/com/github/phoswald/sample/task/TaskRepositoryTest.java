@@ -2,7 +2,6 @@ package com.github.phoswald.sample.task;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.EntityManagerFactory;
@@ -14,8 +13,7 @@ import com.github.phoswald.sample.task.TaskRepository.Transaction;
 
 class TaskRepositoryTest {
 
-    private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("taskDS",
-            Collections.singletonMap("javax.persistence.jdbc.url", "jdbc:h2:mem:test"));
+    private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("taskDS");
 
     private final TaskRepository testee = new TaskRepository(emf.createEntityManager());
 

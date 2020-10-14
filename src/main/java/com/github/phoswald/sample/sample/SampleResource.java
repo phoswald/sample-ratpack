@@ -2,11 +2,12 @@ package com.github.phoswald.sample.sample;
 
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Optional;
+
+import com.github.phoswald.sample.ConfigProvider;
 
 public class SampleResource {
 
-    private final String sampleConfig = Optional.ofNullable(System.getenv("APP_SAMPLE_CONFIG")).orElse("Undefined");
+    private final String sampleConfig = new ConfigProvider().getConfigProperty("app.sample.config").orElse("Undefined");
 
     public String getTime() {
         return ZonedDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME);

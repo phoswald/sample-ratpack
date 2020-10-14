@@ -6,7 +6,6 @@ import static ratpack.jackson.Jackson.json;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -14,6 +13,7 @@ import java.util.function.Supplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.github.phoswald.sample.ConfigProvider;
 import com.github.phoswald.sample.sample.EchoRequest;
 import com.github.phoswald.sample.sample.SampleController;
 import com.github.phoswald.sample.sample.SampleResource;
@@ -34,7 +34,8 @@ import ratpack.server.ServerConfigBuilder;
 public class Application {
 
     private static final Logger logger = LogManager.getLogger();
-    private static final int port = Integer.parseInt(Optional.ofNullable(System.getenv("APP_HTTP_PORT")).orElse("8080"));
+    private static final ConfigProvider config = new ConfigProvider();
+    private static final int port = Integer.parseInt(config.getConfigProperty("app.http.port").orElse("8080"));
 
     public static void main(String[] args) throws Exception {
         logger.info("sample-ratpack is starting, port=" + port);
@@ -52,24 +53,24 @@ public class Application {
     private static Action<? super Chain> createRoutes() {
         return chain -> chain
                 .files(config -> config.indexFiles("index.html"))
-                .get("rest/sample/time", createHandler(() -> new SampleResource().getTime()))
-                .get("rest/sample/config", createHandler(() -> new SampleResource().getConfig()))
-                .post("rest/sample/echo-json", createJsonHandler(EchoRequest.class, reqBody -> new SampleResource().postEcho(reqBody)))
-                .get("rest/pages/sample", createHtmlHandler(() -> new SampleController().getSamplePage()))
-                .path("rest/tasks", ctx2 -> ctx2.byMethod(chain2 -> chain2
+                .get("app/rest/sample/time", createHandler(() -> new SampleResource().getTime()))
+                .get("app/rest/sample/config", createHandler(() -> new SampleResource().getConfig()))
+                .post("app/rest/sample/echo-json", createJsonHandler(EchoRequest.class, reqBody -> new SampleResource().postEcho(reqBody)))
+                .get("app/pages/sample", createHtmlHandler(() -> new SampleController().getSamplePage()))
+                .path("app/rest/tasks", ctx2 -> ctx2.byMethod(chain2 -> chain2
                         .get(createJsonHandler(() -> createTaskResource().getTasks()))
                         .post(createJsonHandler(TaskEntity.class, reqBody -> createTaskResource().postTasks(reqBody)))
                 ))
-                .path("rest/tasks/:id", ctx2 -> ctx2.byMethod(chain2 -> chain2
+                .path("app/rest/tasks/:id", ctx2 -> ctx2.byMethod(chain2 -> chain2
                         .get(createJsonHandlerEx(ctx -> createTaskResource().getTask(ctx.getPathTokens().get("id"))))
                         .put(createJsonHandlerEx(TaskEntity.class, (ctx, reqBody) -> createTaskResource().putTask(ctx.getPathTokens().get("id"), reqBody)))
                         .delete(createJsonHandlerEx(ctx -> createTaskResource().deleteTask(ctx.getPathTokens().get("id"))))
                 ))
-                .path("rest/pages/tasks", ctx2 -> ctx2.byMethod(chain2 -> chain2
+                .path("app/pages/tasks", ctx2 -> ctx2.byMethod(chain2 -> chain2
                         .get(createHtmlHandler(() -> createTaskController().getTasksPage()))
                         .post(createHtmlFormHandler(form -> createTaskController().postTasksPage(form.get("title"), form.get("description"))))
                  ))
-                .path("rest/pages/tasks/:id", ctx2 -> ctx2.byMethod(chain2 -> chain2
+                .path("app/pages/tasks/:id", ctx2 -> ctx2.byMethod(chain2 -> chain2
                         .get(createHtmlHandlerEx(ctx -> createTaskController().getTaskPage(ctx.getPathTokens().get("id"), ctx.getRequest().getQueryParams().get("action"))))
                         .post(createHtmlFormHandlerEx((ctx, form) -> createTaskController().postTaskPage(ctx.getPathTokens().get("id"), form.get("action"), form.get("title"), form.get("description"), form.get("done"))))
                 ));
@@ -131,8 +132,11 @@ public class Application {
 
     private static TaskRepository createTaskRepository() {
         try {
-            Connection conn = DriverManager.getConnection("jdbc:h2:./databases/task-db", "sa", "sa");
-            return new TaskRepository(conn);
+        	String url = config.getConfigProperty("app.jdbc.url").orElse("jdbc:h2:mem:test;INIT=RUNSCRIPT FROM 'src/main/resources/schema.sql'");
+        	String username = config.getConfigProperty("app.jdbc.username").orElse("sa");
+        	String password = config.getConfigProperty("app.jdbc.password").orElse("sa");
+            Connection conn = DriverManager.getConnection(url, username, password);
+            return new TaskRepository(conn); // TODO review cleanup
         } catch (SQLException e) {
             throw new IllegalStateException(e);
         }

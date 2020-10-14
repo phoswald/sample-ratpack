@@ -69,7 +69,7 @@ public class TaskController {
             TaskEntity entity = repository.selectTaskById(id);
             if (Objects.equals(action, "delete")) {
                 repository.deleteTask(entity);
-                return "REDIRECT:/rest/pages/tasks";
+                return "REDIRECT:/app/pages/tasks";
             }
             if (Objects.equals(action, "store")) {
                 entity.setTimestamp(Instant.now());

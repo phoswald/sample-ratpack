@@ -15,7 +15,7 @@ $ export APP_SAMPLE_CONFIG=ValueFromShell
 $ java \
   -Dapp.http.port=8080 \
   -Dapp.jdbc.url=jdbc:h2:./databases/task-db \
-  -cp 'target/*:target/lib/*' com.github.phoswald.sample.ratpack.Application
+  -cp 'target/*:target/lib/*' com.github.phoswald.sample.Application
 ~~~
 
 ## Run with Docker
@@ -37,6 +37,9 @@ $ docker run -it --name sample-ratpack --rm \
 ~~~
 $ curl 'http://localhost:8080/app/rest/sample/time' -i
 $ curl 'http://localhost:8080/app/rest/sample/config' -i
+$ curl 'http://localhost:8080/app/rest/sample/echo-xml' -i -X POST \
+  -H 'content-type: text/xml' \
+  -d '<echoRequest><input>This is CURL</input></echoRequest>'
 $ curl 'http://localhost:8080/app/rest/sample/echo-json' -i -X POST \
   -H 'content-type: application/json' \
   -d '{"input":"This is CURL"}'

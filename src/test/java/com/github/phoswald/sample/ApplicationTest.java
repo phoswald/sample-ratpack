@@ -151,7 +151,8 @@ class ApplicationTest {
         when().
             delete("/app/rest/tasks/" + taskId.get()).
         then().
-            statusCode(200);
+            statusCode(200).
+            body(equalTo(""));
 
         when().
             get("/app/rest/tasks").
@@ -163,8 +164,8 @@ class ApplicationTest {
         when().
             get("/app/rest/tasks/" + taskId.get()).
         then().
-            statusCode(200). // TODO should be 404
-            body(equalTo("null")); // TODO should be empty
+            statusCode(404).
+            body(equalTo(""));
     }
 
     private static class TestModule implements ApplicationModule {

@@ -5,6 +5,7 @@ import static ratpack.jackson.Jackson.json;
 
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.nio.file.Path;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -83,70 +84,78 @@ public class Application {
                 .get("app/rest/sample/time", createHandler(() -> sampleResource.getTime()))
                 .get("app/rest/sample/config", createHandler(() -> sampleResource.getConfig()))
                 .post("app/rest/sample/echo-xml", createXmlHandler(EchoRequest.class, reqBody -> sampleResource.postEcho(reqBody)))
-                .post("app/rest/sample/echo-json", createJsonHandler(EchoRequest.class, reqBody -> sampleResource.postEcho(reqBody)))
-                .get("app/pages/sample", createHtmlHandler(() -> sampleController.getSamplePage()))
+                .post("app/rest/sample/echo-json", createJsonHandler(EchoRequest.class, (ctx, reqBody) -> sampleResource.postEcho(reqBody)))
+                .get("app/pages/sample", createHtmlHandler(ctx -> sampleController.getSamplePage()))
                 .path("app/rest/tasks", ctx2 -> ctx2.byMethod(chain2 -> chain2
-                        .get(createJsonHandler(() -> taskResource.getTasks()))
-                        .post(createJsonHandler(TaskEntity.class, reqBody -> taskResource.postTasks(reqBody)))
+                        .get(createJsonHandler(ctx -> taskResource.getTasks()))
+                        .post(createJsonHandler(TaskEntity.class, (ctx, reqBody) -> taskResource.postTasks(reqBody)))
                 ))
                 .path("app/rest/tasks/:id", ctx2 -> ctx2.byMethod(chain2 -> chain2
-                        .get(createJsonHandlerEx(ctx -> taskResource.getTask(ctx.getPathTokens().get("id"))))
-                        .put(createJsonHandlerEx(TaskEntity.class, (ctx, reqBody) -> taskResource.putTask(ctx.getPathTokens().get("id"), reqBody)))
-                        .delete(createJsonHandlerEx(ctx -> taskResource.deleteTask(ctx.getPathTokens().get("id"))))
+                        .get(createJsonHandler(ctx -> taskResource.getTask(ctx.getPathTokens().get("id"))))
+                        .put(createJsonHandler(TaskEntity.class, (ctx, reqBody) -> taskResource.putTask(ctx.getPathTokens().get("id"), reqBody)))
+                        .delete(createJsonHandler(ctx -> taskResource.deleteTask(ctx.getPathTokens().get("id"))))
                 ))
                 .path("app/pages/tasks", ctx2 -> ctx2.byMethod(chain2 -> chain2
-                        .get(createHtmlHandler(() -> taskController.getTasksPage()))
-                        .post(createHtmlFormHandler(form -> taskController.postTasksPage(form.get("title"), form.get("description"))))
+                        .get(createHtmlHandler(ctx -> taskController.getTasksPage()))
+                        .post(createHtmlHandler((ctx, form) -> taskController.postTasksPage(form.get("title"), form.get("description"))))
                  ))
                 .path("app/pages/tasks/:id", ctx2 -> ctx2.byMethod(chain2 -> chain2
-                        .get(createHtmlHandlerEx(ctx -> taskController.getTaskPage(ctx.getPathTokens().get("id"), ctx.getRequest().getQueryParams().get("action"))))
-                        .post(createHtmlFormHandlerEx((ctx, form) -> taskController.postTaskPage(ctx.getPathTokens().get("id"), form.get("action"), form.get("title"), form.get("description"), form.get("done"))))
+                        .get(createHtmlHandler(ctx -> taskController.getTaskPage(ctx.getPathTokens().get("id"), ctx.getRequest().getQueryParams().get("action"))))
+                        .post(createHtmlHandler((ctx, form) -> taskController.postTaskPage(ctx.getPathTokens().get("id"), form.get("action"), form.get("title"), form.get("description"), form.get("done"))))
                 ));
     }
 
-    private <R> Handler createXmlHandler(Class<R> reqClass, Function<R, Object> callback) {
-        return ctx -> ctx.getRequest().getBody().then(reqBody -> ctx.header("content-type", "text/xml").render(serializeXml(callback.apply(deserializeXml(reqClass, reqBody.getText())))));
-    }
-
     private Handler createHandler(Supplier<Object> callback) {
-        return ctx -> ctx.render(callback.get());
+        return ctx -> {
+            Object result = callback.get();
+            ctx.render(result);
+        };
     }
 
-    private <R> Handler createJsonHandler(Supplier<Object> callback) {
-        return ctx -> ctx.render(json(callback.get()));
+    private <R> Handler createXmlHandler(Class<R> reqClass, Function<R, Object> callback) {
+        return ctx -> ctx.getRequest().getBody().map(reqBody -> deserializeXml(reqClass, reqBody.getText())).then(
+                reqBody -> handleXml(ctx, () -> callback.apply(reqBody)));
     }
 
-    private <R> Handler createJsonHandlerEx(Function<Context, Object> callback) {
-        return ctx -> ctx.render(json(callback.apply(ctx)));
+    private void handleXml(Context ctx, Supplier<Object> callback) {
+        Object result = callback.get();
+        ctx.header("content-type", "text/xml").render(serializeXml(result));
     }
 
-    private <R> Handler createJsonHandler(Class<R> reqClass, Function<R, Object> callback) {
-        return ctx -> ctx.parse(fromJson(reqClass)).then(reqBody -> ctx.render(json(callback.apply(reqBody))));
+    private Handler createJsonHandler(Function<Context, Object> callback) {
+        return ctx -> handleJson(ctx, () -> callback.apply(ctx));
     }
 
-    private <R> Handler createJsonHandlerEx(Class<R> reqClass, BiFunction<Context, R, Object> callback) {
-        return ctx -> ctx.parse(fromJson(reqClass)).then(reqBody -> ctx.render(json(callback.apply(ctx, reqBody))));
+    private <R> Handler createJsonHandler(Class<R> reqClass, BiFunction<Context, R, Object> callback) {
+        return ctx -> ctx.parse(fromJson(reqClass)).then(
+                reqBody -> handleJson(ctx, () -> callback.apply(ctx, reqBody)));
     }
 
-    private Handler createHtmlHandler(Supplier<Object> callback) {
-        return ctx -> ctx.header("content-type", "text/html").render(callback.get());
+    private void handleJson(Context ctx, Supplier<Object> callback) {
+        Object result = callback.get();
+        if(result == null) {
+            ctx.notFound();
+        } else if(result instanceof String resultString) {
+            ctx.render(resultString);
+        } else {
+            ctx.render(json(result));
+        }
     }
 
-    private Handler createHtmlHandlerEx(Function<Context, Object> callback) {
-        return ctx -> ctx.header("content-type", "text/html").render(callback.apply(ctx));
+    private Handler createHtmlHandler(Function<Context, Object> callback) {
+        return ctx -> handleHtml(ctx, () -> callback.apply(ctx));
     }
 
-    private Handler createHtmlFormHandler(Function<Form, Object> callback) {
-        return ctx -> ctx.parse(Form.class).then(form -> ctx.header("content-type", "text/html").render(callback.apply(form)));
+    private Handler createHtmlHandler(BiFunction<Context, Form, Object> callback) {
+        return ctx -> ctx.parse(Form.class).then(form -> handleHtml(ctx, () -> callback.apply(ctx, form)));
     }
 
-    private Handler createHtmlFormHandlerEx(BiFunction<Context, Form, Object> callback) {
-        return ctx -> ctx.parse(Form.class).then(form -> sendHtmlOrRedirect(ctx, callback.apply(ctx, form)));
-    }
-
-    private void sendHtmlOrRedirect(Context ctx, Object result) {
-        if(result instanceof String && ((String) result).startsWith("REDIRECT:")) { // TODO refactor redirect
-            ctx.redirect(((String) result).substring(9));
+    private void handleHtml(Context ctx, Supplier<Object> callback) {
+        Object result = callback.get();
+        if(result == null) {
+            ctx.notFound();
+        } else if(result instanceof Path resultPath) {
+            ctx.redirect(resultPath.toString());
         } else {
             ctx.header("content-type", "text/html").render(result);
         }

@@ -83,7 +83,7 @@ public class Application {
                 .files(config -> config.indexFiles("index.html"))
                 .get("app/rest/sample/time", createHandler(() -> sampleResource.getTime()))
                 .get("app/rest/sample/config", createHandler(() -> sampleResource.getConfig()))
-                .post("app/rest/sample/echo-xml", createXmlHandler(EchoRequest.class, reqBody -> sampleResource.postEcho(reqBody)))
+                .post("app/rest/sample/echo-xml", createXmlHandler(EchoRequest.class, (ctx, reqBody) -> sampleResource.postEcho(reqBody)))
                 .post("app/rest/sample/echo-json", createJsonHandler(EchoRequest.class, (ctx, reqBody) -> sampleResource.postEcho(reqBody)))
                 .get("app/pages/sample", createHtmlHandler(ctx -> sampleController.getSamplePage()))
                 .path("app/rest/tasks", ctx2 -> ctx2.byMethod(chain2 -> chain2
@@ -112,9 +112,9 @@ public class Application {
         };
     }
 
-    private <R> Handler createXmlHandler(Class<R> reqClass, Function<R, Object> callback) {
+    private <R> Handler createXmlHandler(Class<R> reqClass, BiFunction<Context, R, Object> callback) {
         return ctx -> ctx.getRequest().getBody().map(reqBody -> deserializeXml(reqClass, reqBody.getText())).then(
-                reqBody -> handleXml(ctx, () -> callback.apply(reqBody)));
+                reqBody -> handleXml(ctx, () -> callback.apply(ctx, reqBody)));
     }
 
     private void handleXml(Context ctx, Supplier<Object> callback) {

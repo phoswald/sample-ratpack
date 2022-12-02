@@ -8,10 +8,10 @@ import static org.hamcrest.Matchers.matchesRegex;
 import static org.hamcrest.Matchers.startsWith;
 
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.github.phoswald.sample.task.TaskEntity;
@@ -61,7 +61,6 @@ class ApplicationTest {
             body(equalTo("Test Config Value"));
     }
 
-    @Disabled // TODO support XML, not only JSON
     @Test
     void postEchoXml() {
         given().
@@ -101,8 +100,9 @@ class ApplicationTest {
                 containsString("<td>Test Config Value</td>")); // ${model.sampleConfig}
     }
 
-    @Test // TODO test all tasks REST endpoints
+    @Test
     void crudTaskResource() {
+        var taskId = new AtomicReference<String>();
         var request = new TaskEntity();
         request.setTitle("Test title");
         given().
@@ -113,10 +113,58 @@ class ApplicationTest {
         then().
             statusCode(200).
             contentType("application/json").
+            body("taskId", PeekMatcher.peek(taskId::set)).
             body("taskId", matchesRegex("[0-9a-f-]{36}")).
             body("userId", equalTo("guest")).
             body("title", equalTo("Test title"));
 
+        when().
+            get("/app/rest/tasks").
+        then().
+            statusCode(200).
+            contentType("application/json").
+            body("$.size()", equalTo(1));
+
+        request = new TaskEntity();
+        request.setTitle("Test title, updated");
+        given().
+            contentType("application/json").
+            body(request).
+        when().
+            put("/app/rest/tasks/" + taskId.get()).
+        then().
+            statusCode(200).
+            contentType("application/json").
+            body("taskId", equalTo(taskId.get())).
+            body("userId", equalTo("guest")).
+            body("title", equalTo("Test title, updated"));
+
+        when().
+            get("/app/rest/tasks/" + taskId.get()).
+        then().
+            statusCode(200).
+            contentType("application/json").
+            body("taskId", equalTo(taskId.get())).
+            body("userId", equalTo("guest")).
+            body("title", equalTo("Test title, updated"));
+
+        when().
+            delete("/app/rest/tasks/" + taskId.get()).
+        then().
+            statusCode(200);
+
+        when().
+            get("/app/rest/tasks").
+        then().
+            statusCode(200).
+            contentType("application/json").
+            body("$.size()", equalTo(0));
+
+        when().
+            get("/app/rest/tasks/" + taskId.get()).
+        then().
+            statusCode(200). // TODO should be 404
+            body(equalTo("null")); // TODO should be empty
     }
 
     private static class TestModule implements ApplicationModule {

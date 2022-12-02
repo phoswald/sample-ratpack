@@ -3,6 +3,8 @@ package com.github.phoswald.sample;
 import static ratpack.jackson.Jackson.fromJson;
 import static ratpack.jackson.Jackson.json;
 
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -18,6 +20,7 @@ import com.github.phoswald.sample.task.TaskEntity;
 import com.github.phoswald.sample.task.TaskResource;
 import com.github.phoswald.sample.utils.ConfigProvider;
 
+import jakarta.xml.bind.JAXB;
 import ratpack.form.Form;
 import ratpack.func.Action;
 import ratpack.handling.Chain;
@@ -79,6 +82,7 @@ public class Application {
                 .files(config -> config.indexFiles("index.html"))
                 .get("app/rest/sample/time", createHandler(() -> sampleResource.getTime()))
                 .get("app/rest/sample/config", createHandler(() -> sampleResource.getConfig()))
+                .post("app/rest/sample/echo-xml", createXmlHandler(EchoRequest.class, reqBody -> sampleResource.postEcho(reqBody)))
                 .post("app/rest/sample/echo-json", createJsonHandler(EchoRequest.class, reqBody -> sampleResource.postEcho(reqBody)))
                 .get("app/pages/sample", createHtmlHandler(() -> sampleController.getSamplePage()))
                 .path("app/rest/tasks", ctx2 -> ctx2.byMethod(chain2 -> chain2
@@ -100,7 +104,9 @@ public class Application {
                 ));
     }
 
-    // TODO support XML, not only JSON
+    private <R> Handler createXmlHandler(Class<R> reqClass, Function<R, Object> callback) {
+        return ctx -> ctx.getRequest().getBody().then(reqBody -> ctx.header("content-type", "text/xml").render(serializeXml(callback.apply(deserializeXml(reqClass, reqBody.getText())))));
+    }
 
     private Handler createHandler(Supplier<Object> callback) {
         return ctx -> ctx.render(callback.get());
@@ -144,5 +150,15 @@ public class Application {
         } else {
             ctx.header("content-type", "text/html").render(result);
         }
+    }
+
+    private static String serializeXml(Object object) {
+        var buffer = new StringWriter();
+        JAXB.marshal(object, buffer);
+        return buffer.toString();
+    }
+
+    private static <T> T deserializeXml(Class<T> clazz, String text) {
+        return JAXB.unmarshal(new StringReader(text), clazz);
     }
 }

@@ -48,6 +48,11 @@
       <artifactId>ratpack-core</artifactId>
       <version>1.9.0</version>
     </dependency>
+    <dependency>
+      <groupId>jakarta.xml.bind</groupId>
+      <artifactId>jakarta.xml.bind-api</artifactId>
+      <version>3.0.1</version>
+    </dependency>
 
     <!-- Templating -->
     <dependency>
@@ -103,7 +108,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
-        <version>3.3.0</version>
+        <version>3.4.0</version>
         <executions>
           <execution>
             <id>copy-libs</id>

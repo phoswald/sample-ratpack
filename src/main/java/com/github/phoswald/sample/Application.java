@@ -81,8 +81,8 @@ public class Application {
     private Action<? super Chain> createRoutes() {
         return chain -> chain
                 .files(config -> config.indexFiles("index.html"))
-                .get("app/rest/sample/time", createHandler(() -> sampleResource.getTime()))
-                .get("app/rest/sample/config", createHandler(() -> sampleResource.getConfig()))
+                .get("app/rest/sample/time", createHandler(ctx -> sampleResource.getTime()))
+                .get("app/rest/sample/config", createHandler(ctx -> sampleResource.getConfig()))
                 .post("app/rest/sample/echo-xml", createXmlHandler(EchoRequest.class, (ctx, reqBody) -> sampleResource.postEcho(reqBody)))
                 .post("app/rest/sample/echo-json", createJsonHandler(EchoRequest.class, (ctx, reqBody) -> sampleResource.postEcho(reqBody)))
                 .get("app/pages/sample", createHtmlHandler(ctx -> sampleController.getSamplePage()))
@@ -105,9 +105,9 @@ public class Application {
                 ));
     }
 
-    private Handler createHandler(Supplier<Object> callback) {
+    private Handler createHandler(Function<Context, Object> callback) {
         return ctx -> {
-            Object result = callback.get();
+            Object result = callback.apply(ctx);
             ctx.render(result);
         };
     }

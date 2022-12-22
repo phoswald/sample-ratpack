@@ -1,5 +1,6 @@
 /target/
-/.settings/
-/.classpath
 /.project
+/.classpath
+/.factorypath
+/.settings/
 /databases

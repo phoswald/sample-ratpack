@@ -26,16 +26,6 @@ public class TaskRepository implements AutoCloseable {
         this.dsl = DSL.using(conn, SQLDialect.H2);
     }
 
-    public Transaction openTransaction() {
-        // TODO: create transaction? or implicit?
-        return new Transaction() {
-            @Override
-            public void close() {
-                // TODO: commit transaction? or implicit?
-            }
-        };
-    }
-
     @Override
     public void close() {
         try {
@@ -99,10 +89,5 @@ public class TaskRepository implements AutoCloseable {
 
     private LocalDateTime convertTimestamp(Instant t) {
         return t == null ? null : t.atOffset(ZoneOffset.UTC).toLocalDateTime();
-    }
-
-    public static interface Transaction extends AutoCloseable {
-        @Override
-        public void close();
     }
 }

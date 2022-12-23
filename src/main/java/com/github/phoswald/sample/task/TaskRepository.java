@@ -52,15 +52,19 @@ public class TaskRepository implements AutoCloseable {
     }
 
     public TaskEntity selectTaskById(String taskId) {
-        Record record = dsl.select().from(TASK).where(TASK.TASK_ID.eq(taskId)).fetchSingle();
-        TaskEntity entity = new TaskEntity();
-        entity.setTaskId(record.get(TASK.TASK_ID));
-        entity.setUserId(record.get(TASK.USER_ID));
-        entity.setTimestamp(convertTimestamp(record.get(TASK.TIMESTAMP)));
-        entity.setTitle(record.get(TASK.TITLE));
-        entity.setDescription(record.get(TASK.DESCRIPTION));
-        entity.setDone(record.get(TASK.DONE));
-        return entity;
+        Record record = dsl.select().from(TASK).where(TASK.TASK_ID.eq(taskId)).fetchOne();
+        if(record == null)  {
+            return null;
+        } else {
+            TaskEntity entity = new TaskEntity();
+            entity.setTaskId(record.get(TASK.TASK_ID));
+            entity.setUserId(record.get(TASK.USER_ID));
+            entity.setTimestamp(convertTimestamp(record.get(TASK.TIMESTAMP)));
+            entity.setTitle(record.get(TASK.TITLE));
+            entity.setDescription(record.get(TASK.DESCRIPTION));
+            entity.setDone(record.get(TASK.DONE));
+            return entity;
+        }
     }
 
     public void createTask(TaskEntity entity) {

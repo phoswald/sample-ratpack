@@ -2,26 +2,19 @@ package com.github.phoswald.sample.task;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.List;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import com.github.phoswald.sample.ApplicationModule;
 
 class TaskRepositoryTest {
 
-    private final TaskRepository testee = new TaskRepository(createConnection());
-
-    @AfterEach
-    void cleanup() {
-        testee.close();
-    }
+    private static final ApplicationModule module = new ApplicationModule() { };
 
     @Test
-    void testCrud() { // XXX
-//        try(Transaction txn = testee.openTransaction()) {
+    void testCrud() {
+        try(TaskRepository testee = new TaskRepository(module.getConnection())) {
             assertEquals(0, testee.selectAllTasks().size());
 
             TaskEntity entity = new TaskEntity();
@@ -29,21 +22,14 @@ class TaskRepositoryTest {
             entity.setTitle("Test Title");
             entity.setDescription("Test Description");
             testee.createTask(entity);
-//        }
-//        try(Transaction txn = testee.openTransaction()) {
+        }
+
+        try(TaskRepository testee = new TaskRepository(module.getConnection())) {
             List<TaskEntity> entites = testee.selectAllTasks();
 
             assertEquals(1, entites.size());
             assertEquals("Test Title", entites.get(0).getTitle());
             assertEquals("Test Description", entites.get(0).getDescription());
-//        }
-    }
-
-    private Connection createConnection() {
-        try {
-            return DriverManager.getConnection("jdbc:h2:mem:test;INIT=RUNSCRIPT FROM 'src/main/resources/schema.sql'", "sa", "sa");
-        } catch (SQLException e) {
-            throw new IllegalStateException(e);
         }
     }
 }

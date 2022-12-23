@@ -53,13 +53,13 @@
       <groupId>jakarta.xml.bind</groupId>
       <artifactId>jakarta.xml.bind-api</artifactId>
       <version>3.0.1</version>
-    </dependency>    
+    </dependency>
     <dependency>
       <groupId>org.glassfish.jaxb</groupId>
       <artifactId>jaxb-runtime</artifactId>
       <version>3.0.2</version>
       <scope>runtime</scope>
-    </dependency>  
+    </dependency>
 
     <!-- Templating -->
     <dependency>
@@ -132,8 +132,8 @@
             </configuration>
           </execution>
         </executions>
-      </plugin>    
-    
+      </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>

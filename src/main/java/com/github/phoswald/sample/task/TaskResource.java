@@ -47,6 +47,7 @@ public class TaskResource {
             entity.setTitle(request.getTitle());
             entity.setDescription(request.getDescription());
             entity.setDone(request.isDone());
+            repository.updateTask(entity);
             return entity;
         }
     }

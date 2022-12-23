@@ -46,7 +46,7 @@ public interface ApplicationModule {
     default Connection getConnection() {
         try {
             var config = getConfigProvider();
-            String url = config.getConfigProperty("app.jdbc.url").orElse("jdbc:h2:mem:test;INIT=RUNSCRIPT FROM 'src/main/resources/schema.sql'");
+            String url = config.getConfigProperty("app.jdbc.url").orElse("jdbc:h2:mem:test " + hashCode() + " ;DB_CLOSE_DELAY=-1;INIT=RUNSCRIPT FROM 'src/main/resources/schema.sql'");
             String username = config.getConfigProperty("app.jdbc.username").orElse("sa");
             String password = config.getConfigProperty("app.jdbc.password").orElse("sa");
             return DriverManager.getConnection(url, username, password);

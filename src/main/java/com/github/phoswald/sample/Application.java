@@ -10,8 +10,8 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.phoswald.sample.sample.EchoRequest;
 import com.github.phoswald.sample.sample.SampleController;
@@ -33,7 +33,7 @@ import ratpack.server.ServerConfigBuilder;
 
 public class Application {
 
-    private static final Logger logger = LogManager.getLogger();
+    private static final Logger logger = LoggerFactory.getLogger(Application.class);
 
     private final int port;
     private final SampleResource sampleResource;
